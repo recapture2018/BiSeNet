@@ -72,23 +72,23 @@ class RandomHorizontalFlip(object):
 class ColorJitter(object):
 
     def __init__(self, brightness=None, contrast=None, saturation=None):
-        if not brightness is None and brightness >= 0:
+        if brightness is not None and brightness >= 0:
             self.brightness = [max(1-brightness, 0), 1+brightness]
-        if not contrast is None and contrast >= 0:
+        if contrast is not None and contrast >= 0:
             self.contrast = [max(1-contrast, 0), 1+contrast]
-        if not saturation is None and saturation >= 0:
+        if saturation is not None and saturation >= 0:
             self.saturation = [max(1-saturation, 0), 1+saturation]
 
     def __call__(self, im_lb):
         im, lb = im_lb['im'], im_lb['lb']
         assert im.shape[:2] == lb.shape[:2]
-        if not self.brightness is None:
+        if self.brightness is not None:
             rate = np.random.uniform(*self.brightness)
             im = self.adj_brightness(im, rate)
-        if not self.contrast is None:
+        if self.contrast is not None:
             rate = np.random.uniform(*self.contrast)
             im = self.adj_contrast(im, rate)
-        if not self.saturation is None:
+        if self.saturation is not None:
             rate = np.random.uniform(*self.saturation)
             im = self.adj_saturation(im, rate)
         return dict(im=im, lb=lb,)

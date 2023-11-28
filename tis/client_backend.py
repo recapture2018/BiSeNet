@@ -30,8 +30,7 @@ std = [0.2112, 0.2148, 0.2115]
 inp_data = np.fromfile(impth, dtype=np.uint8)[None, ...]
 mean = np.array(mean, dtype=np.float32)[None, ...]
 std = np.array(std, dtype=np.float32)[None, ...]
-inputs = []
-inputs.append(httpclient.InferInput(inp_name, inp_data.shape, inp_dtype))
+inputs = [httpclient.InferInput(inp_name, inp_data.shape, inp_dtype)]
 inputs.append(httpclient.InferInput('channel_mean', mean.shape, 'FP32'))
 inputs.append(httpclient.InferInput('channel_std', std.shape, 'FP32'))
 inputs[0].set_data_from_numpy(inp_data, binary_data=True)

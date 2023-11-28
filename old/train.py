@@ -75,7 +75,7 @@ def train():
     ## model
     ignore_idx = 255
     net = BiSeNet(n_classes=n_classes)
-    if not args.ckpt is None:
+    if args.ckpt is not None:
         net.load_state_dict(torch.load(args.ckpt, map_location='cpu'))
     net.cuda()
     net.train()
@@ -116,7 +116,7 @@ def train():
     for it in range(max_iter):
         try:
             im, lb = next(diter)
-            if not im.size()[0]==n_img_per_gpu: raise StopIteration
+            if im.size()[0] != n_img_per_gpu: raise StopIteration
         except StopIteration:
             epoch += 1
             sampler.set_epoch(epoch)
@@ -168,7 +168,7 @@ def train():
     net.cpu()
     state = net.module.state_dict() if hasattr(net, 'module') else net.state_dict()
     if dist.get_rank()==0: torch.save(state, save_pth)
-    logger.info('training done, model saved to: {}'.format(save_pth))
+    logger.info(f'training done, model saved to: {save_pth}')
 
 
 if __name__ == "__main__":

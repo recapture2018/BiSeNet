@@ -53,7 +53,7 @@ class RepeatedDistSampler(Sampler):
                 g.manual_seed(n)
                 indices += torch.randperm(len(self.dataset), generator=g).tolist()
             else:
-                indices += [i for i in range(len(self.dataset))]
+                indices += list(range(len(self.dataset)))
 
         # add extra samples to make it evenly divisible
         indices = indices[:self.total_size]

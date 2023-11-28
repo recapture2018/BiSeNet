@@ -25,8 +25,6 @@ class OhemCELoss(nn.Module):
         return torch.mean(loss_hard)
 
 
-if __name__ == '__main__':
-    pass
     #  criteria1 = OhemCELoss(thresh=0.7, n_min=16*20*20//16).cuda()
     #  criteria2 = OhemCELoss(thresh=0.7, n_min=16*20*20//16).cuda()
 

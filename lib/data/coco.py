@@ -54,7 +54,7 @@ class CocoStuff(BaseDataset):
 
         ## label mapping, remove non-existing labels
         missing = [11, 25, 28, 29, 44, 65, 67, 68, 70, 82, 90]
-        remain = [ind for ind in range(182) if not ind in missing]
+        remain = [ind for ind in range(182) if ind not in missing]
         self.lb_map = np.arange(256)
         for ind in remain:
             self.lb_map[ind] = remain.index(ind)

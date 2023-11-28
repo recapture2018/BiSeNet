@@ -255,8 +255,7 @@ class BGALayer(nn.Module):
         right = left2 * torch.sigmoid(right2)
         right = F.interpolate(
             right, size=dsize, mode='bilinear', align_corners=True)
-        out = self.conv(left + right)
-        return out
+        return self.conv(left + right)
 
 
 
@@ -274,7 +273,7 @@ class SegmentHead(nn.Module):
         feat = self.conv(x)
         feat = self.drop(feat)
         feat = self.conv_out(feat)
-        if not size is None:
+        if size is not None:
             feat = F.interpolate(feat, size=size,
                 mode='bilinear', align_corners=True)
         return feat
@@ -314,7 +313,7 @@ class BiSeNetV2(nn.Module):
         for name, module in self.named_modules():
             if isinstance(module, (nn.Conv2d, nn.Linear)):
                 nn.init.kaiming_normal_(module.weight, mode='fan_out')
-                if not module.bias is None: nn.init.constant_(module.bias, 0)
+                if module.bias is not None: nn.init.constant_(module.bias, 0)
             elif isinstance(module, nn.modules.batchnorm._BatchNorm):
                 if hasattr(module, 'last_bn') and module.last_bn:
                     nn.init.zeros_(module.weight)

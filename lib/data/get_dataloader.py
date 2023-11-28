@@ -31,26 +31,8 @@ def get_data_loader(cfg, mode='train'):
 
     ds = eval(cfg.dataset)(cfg.im_root, annpath, trans_func=trans_func, mode=mode)
 
-    if dist.is_initialized():
-        assert dist.is_available(), "dist should be initialzed"
-        if mode == 'train':
-            assert not cfg.max_iter is None
-            n_train_imgs = cfg.ims_per_gpu * dist.get_world_size() * cfg.max_iter
-            sampler = RepeatedDistSampler(ds, n_train_imgs, shuffle=shuffle)
-        else:
-            sampler = torch.utils.data.distributed.DistributedSampler(
-                ds, shuffle=shuffle)
-        batchsampler = torch.utils.data.sampler.BatchSampler(
-            sampler, batchsize, drop_last=drop_last
-        )
-        dl = DataLoader(
-            ds,
-            batch_sampler=batchsampler,
-            num_workers=4,
-            pin_memory=True,
-        )
-    else:
-        dl = DataLoader(
+    if not dist.is_initialized():
+        return DataLoader(
             ds,
             batch_size=batchsize,
             shuffle=shuffle,
@@ -58,4 +40,20 @@ def get_data_loader(cfg, mode='train'):
             num_workers=4,
             pin_memory=True,
         )
-    return dl
+    assert dist.is_available(), "dist should be initialzed"
+    if mode == 'train':
+        assert cfg.max_iter is not None
+        n_train_imgs = cfg.ims_per_gpu * dist.get_world_size() * cfg.max_iter
+        sampler = RepeatedDistSampler(ds, n_train_imgs, shuffle=shuffle)
+    else:
+        sampler = torch.utils.data.distributed.DistributedSampler(
+            ds, shuffle=shuffle)
+    batchsampler = torch.utils.data.sampler.BatchSampler(
+        sampler, batchsize, drop_last=drop_last
+    )
+    return DataLoader(
+        ds,
+        batch_sampler=batchsampler,
+        num_workers=4,
+        pin_memory=True,
+    )

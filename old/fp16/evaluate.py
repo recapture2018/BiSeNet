@@ -122,9 +122,9 @@ class MscEval(object):
         n_classes = self.n_classes
         hist = np.zeros((n_classes, n_classes), dtype=np.float32)
         dloader = tqdm(self.dl)
-        if dist.is_initialized() and not dist.get_rank()==0:
+        if dist.is_initialized() and dist.get_rank() != 0:
             dloader = self.dl
-        for i, (imgs, label) in enumerate(dloader):
+        for imgs, label in dloader:
             N, _, H, W = label.shape
             probs = torch.zeros((N, self.n_classes, H, W))
             probs.requires_grad = False
@@ -138,8 +138,7 @@ class MscEval(object):
             hist_once = self.compute_hist(preds, label.data.numpy().squeeze(1))
             hist = hist + hist_once
         IOUs = np.diag(hist) / (np.sum(hist, axis=0)+np.sum(hist, axis=1)-np.diag(hist))
-        mIOU = np.mean(IOUs)
-        return mIOU
+        return np.mean(IOUs)
 
 
 def evaluate(respth='./res', dspth='./data'):

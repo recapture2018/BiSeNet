@@ -81,8 +81,7 @@ def evaluate(weight_pth):
     net.load_state_dict(torch.load(weight_pth))
     net.cuda()
 
-    is_dist = dist.is_initialized()
-    if is_dist:
+    if is_dist := dist.is_initialized():
         local_rank = dist.get_rank()
         net = nn.parallel.DistributedDataParallel(
             net,
@@ -107,13 +106,14 @@ def parse_args():
 
 def main():
     args = parse_args()
-    if not args.local_rank == -1:
+    if args.local_rank != -1:
         torch.cuda.set_device(args.local_rank)
-        dist.init_process_group(backend='nccl',
-        init_method='tcp://127.0.0.1:{}'.format(args.port),
-        world_size=torch.cuda.device_count(),
-        rank=args.local_rank
-    )
+        dist.init_process_group(
+            backend='nccl',
+            init_method=f'tcp://127.0.0.1:{args.port}',
+            world_size=torch.cuda.device_count(),
+            rank=args.local_rank,
+        )
     if not osp.exists(args.respth): os.makedirs(args.respth)
     setup_logger('BiSeNetV2-eval', args.respth)
     evaluate(args.weight_pth)

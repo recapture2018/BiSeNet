@@ -82,7 +82,7 @@ def set_optimizer(model):
     for name, param in model.named_parameters():
         if param.dim() == 1:
             non_wd_params.append(param)
-        elif param.dim() == 2 or param.dim() == 4:
+        elif param.dim() in [2, 4]:
             wd_params.append(param)
     params_list = [
         {'params': wd_params, },
@@ -113,15 +113,15 @@ def set_meters():
     time_meter = TimeMeter(max_iter)
     loss_meter = AvgMeter('loss')
     loss_pre_meter = AvgMeter('loss_prem')
-    loss_aux_meters = [AvgMeter('loss_aux{}'.format(i)) for i in range(4)]
+    loss_aux_meters = [AvgMeter(f'loss_aux{i}') for i in range(4)]
     return time_meter, loss_meter, loss_pre_meter, loss_aux_meters
 
 
 def save_model(states, save_pth):
     logger = logging.getLogger()
-    logger.info('\nsave models to {}'.format(save_pth))
+    logger.info(f'\nsave models to {save_pth}')
     for name, state in states.items():
-        save_name = 'model_final_{}.pth'.format(name)
+        save_name = f'model_final_{name}.pth'
         modelpth = osp.join(save_pth, save_name)
         if dist.is_initialized() and dist.get_rank() == 0:
             torch.save(state, modelpth)
@@ -192,7 +192,7 @@ def train():
 
     ## dump the final model and evaluate the result
     save_pth = osp.join(args.respth, 'model_final.pth')
-    logger.info('\nsave models to {}'.format(save_pth))
+    logger.info(f'\nsave models to {save_pth}')
     state = net.module.state_dict()
     if dist.get_rank() == 0: torch.save(state, save_pth)
 
@@ -207,9 +207,9 @@ def main():
     torch.cuda.set_device(args.local_rank)
     dist.init_process_group(
         backend='nccl',
-        init_method='tcp://127.0.0.1:{}'.format(args.port),
+        init_method=f'tcp://127.0.0.1:{args.port}',
         world_size=torch.cuda.device_count(),
-        rank=args.local_rank
+        rank=args.local_rank,
     )
     if not osp.exists(args.respth): os.makedirs(args.respth)
     setup_logger('BiSeNetV2-train', args.respth)

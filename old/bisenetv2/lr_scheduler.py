@@ -23,15 +23,14 @@ class WarmupLrScheduler(torch.optim.lr_scheduler._LRScheduler):
 
     def get_lr(self):
         ratio = self.get_lr_ratio()
-        lrs = [ratio * lr for lr in self.base_lrs]
-        return lrs
+        return [ratio * lr for lr in self.base_lrs]
 
     def get_lr_ratio(self):
-        if self.last_epoch < self.warmup_iter:
-            ratio = self.get_warmup_ratio()
-        else:
-            ratio = self.get_main_ratio()
-        return ratio
+        return (
+            self.get_warmup_ratio()
+            if self.last_epoch < self.warmup_iter
+            else self.get_main_ratio()
+        )
 
     def get_main_ratio(self):
         raise NotImplementedError
@@ -67,8 +66,7 @@ class WarmupPolyLrScheduler(WarmupLrScheduler):
         real_iter = self.last_epoch - self.warmup_iter
         real_max_iter = self.max_iter - self.warmup_iter
         alpha = real_iter / real_max_iter
-        ratio = (1 - alpha) ** self.power
-        return ratio
+        return (1 - alpha) ** self.power
 
 
 class WarmupExpLrScheduler(WarmupLrScheduler):
@@ -90,8 +88,7 @@ class WarmupExpLrScheduler(WarmupLrScheduler):
 
     def get_main_ratio(self):
         real_iter = self.last_epoch - self.warmup_iter
-        ratio = self.gamma ** (real_iter // self.interval)
-        return ratio
+        return self.gamma ** (real_iter // self.interval)
 
 
 class WarmupCosineLrScheduler(WarmupLrScheduler):
@@ -137,8 +134,7 @@ class WarmupStepLrScheduler(WarmupLrScheduler):
 
     def get_main_ratio(self):
         real_iter = self.last_epoch - self.warmup_iter
-        ratio = self.gamma ** bisect_right(self.milestones, real_iter)
-        return ratio
+        return self.gamma ** bisect_right(self.milestones, real_iter)
 
 
 if __name__ == "__main__":

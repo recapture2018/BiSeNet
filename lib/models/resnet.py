@@ -51,8 +51,7 @@ class BasicBlock(nn.Module):
 
 def create_layer_basic(in_chan, out_chan, bnum, stride=1):
     layers = [BasicBlock(in_chan, out_chan, stride=stride)]
-    for i in range(bnum-1):
-        layers.append(BasicBlock(out_chan, out_chan, stride=1))
+    layers.extend(BasicBlock(out_chan, out_chan, stride=1) for _ in range(bnum-1))
     return nn.Sequential(*layers)
 
 
@@ -95,7 +94,7 @@ class Resnet18(nn.Module):
         for name, module in self.named_modules():
             if isinstance(module, (nn.Linear, nn.Conv2d)):
                 wd_params.append(module.weight)
-                if not module.bias is None:
+                if module.bias is not None:
                     nowd_params.append(module.bias)
             elif isinstance(module, nn.modules.batchnorm._BatchNorm):
                 nowd_params += list(module.parameters())

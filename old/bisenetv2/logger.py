@@ -10,7 +10,7 @@ import torch.distributed as dist
 
 
 def setup_logger(name, logpth):
-    logfile = '{}-{}.log'.format(name, time.strftime('%Y-%m-%d-%H-%M-%S'))
+    logfile = f"{name}-{time.strftime('%Y-%m-%d-%H-%M-%S')}.log"
     logfile = osp.join(logpth, logfile)
     FORMAT = '%(levelname)s %(filename)s(%(lineno)d): %(message)s'
     log_level = logging.INFO
@@ -42,6 +42,6 @@ def print_log_msg(it, max_iter, lr, time_meter, loss_meter, loss_pre_meter,
         loss=loss_avg,
         loss_pre=loss_pre_avg,
         )
-    msg += ', ' + loss_aux_avg
+    msg += f', {loss_aux_avg}'
     logger = logging.getLogger()
     logger.info(msg)

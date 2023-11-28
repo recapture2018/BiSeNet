@@ -41,6 +41,4 @@ class OhemCELoss(nn.Module):
         return torch.mean(loss_hard)
 
 
-if __name__ == '__main__':
-    pass
 

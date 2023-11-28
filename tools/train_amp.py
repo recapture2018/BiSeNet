@@ -54,7 +54,7 @@ cfg = set_cfg_from_file(args.config)
 def set_model(lb_ignore=255):
     logger = logging.getLogger()
     net = model_factory[cfg.model_type](cfg.n_cats)
-    if not args.finetune_from is None:
+    if args.finetune_from is not None:
         logger.info(f'load pretrained weights from {args.finetune_from}')
         msg = net.load_state_dict(torch.load(args.finetune_from,
             map_location='cpu'), strict=False)
@@ -85,7 +85,7 @@ def set_optimizer(model):
         for name, param in model.named_parameters():
             if param.dim() == 1:
                 non_wd_params.append(param)
-            elif param.dim() == 2 or param.dim() == 4:
+            elif param.dim() in [2, 4]:
                 wd_params.append(param)
         params_list = [
             {'params': wd_params, },
@@ -115,8 +115,7 @@ def set_meters():
     time_meter = TimeMeter(cfg.max_iter)
     loss_meter = AvgMeter('loss')
     loss_pre_meter = AvgMeter('loss_prem')
-    loss_aux_meters = [AvgMeter('loss_aux{}'.format(i))
-            for i in range(cfg.num_aux_heads)]
+    loss_aux_meters = [AvgMeter(f'loss_aux{i}') for i in range(cfg.num_aux_heads)]
     return time_meter, loss_meter, loss_pre_meter, loss_aux_meters
 
 
@@ -181,7 +180,7 @@ def train():
 
     ## dump the final model and evaluate the result
     save_pth = osp.join(cfg.respth, 'model_final.pth')
-    logger.info('\nsave models to {}'.format(save_pth))
+    logger.info(f'\nsave models to {save_pth}')
     state = net.module.state_dict()
     if dist.get_rank() == 0: torch.save(state, save_pth)
 

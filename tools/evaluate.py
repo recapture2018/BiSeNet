@@ -38,23 +38,21 @@ class SizePreprocessor(object):
 
     def __call__(self, imgs):
         new_size = None
-        if not self.shape is None:
+        if self.shape is not None:
             new_size = self.shape
-        elif not self.shortside is None:
+        elif self.shortside is not None:
             h, w = imgs.size()[2:]
             ss = self.shortside
-            if h < w: h, w = ss, int(ss / h * w)
-            else: h, w = int(ss / w * h), ss
+            h, w = (ss, int(ss / h * w)) if h < w else (int(ss / w * h), ss)
             new_size = h, w
-        elif not self.longside is None: # long size limit
+        elif self.longside is not None: # long size limit
             h, w = imgs.size()[2:]
             if max(h, w) > self.longside:
                 ls = self.longside
-                if h < w: h, w = int(ls / w * h), ls
-                else: h, w = ls, int(ls / h * w)
+                h, w = (int(ls / w * h), ls) if h < w else (ls, int(ls / h * w))
                 new_size = h, w
 
-        if not new_size is None:
+        if new_size is not None:
             imgs = F.interpolate(imgs, size=new_size,
                     mode='bilinear', align_corners=False)
         return imgs
@@ -111,16 +109,15 @@ class Metrics(object):
         micro_f1 = (2 * micro_precision * micro_recall) / (
                 micro_precision + micro_recall + eps)
 
-        metric_dict = dict(
-                weights=weights.tolist(),
-                ious=ious.tolist(),
-                miou=miou.item(),
-                fw_miou=fw_miou.item(),
-                f1_scores=f1_scores.tolist(),
-                macro_f1=macro_f1.item(),
-                micro_f1=micro_f1.item(),
-                )
-        return metric_dict
+        return dict(
+            weights=weights.tolist(),
+            ious=ious.tolist(),
+            miou=miou.item(),
+            fw_miou=fw_miou.item(),
+            f1_scores=f1_scores.tolist(),
+            macro_f1=macro_f1.item(),
+            micro_f1=micro_f1.item(),
+        )
 
 
 
@@ -172,8 +169,7 @@ class MscEvalV0(object):
             preds = torch.argmax(probs, dim=1)
             self.metric_observer.update(preds, label)
 
-        metric_dict = self.metric_observer.compute_metrics()
-        return metric_dict
+        return self.metric_observer.compute_metrics()
 
 
 
@@ -281,16 +277,12 @@ class MscEvalCrop(object):
             preds = torch.argmax(probs, dim=1)
             self.metric_observer.update(preds, label)
 
-        metric_dict = self.metric_observer.compute_metrics()
-        return metric_dict
+        return self.metric_observer.compute_metrics()
 
 
 def print_res_table(tname, heads, weights, metric, cat_metric):
     heads = [tname, 'ratio'] + heads
-    lines = []
-    for k, v in metric.items():
-        line = [k, '-'] + [f'{el:.6f}' for el in v]
-        lines.append(line)
+    lines = [[k, '-'] + [f'{el:.6f}' for el in v] for k, v in metric.items()]
     cat_res = [weights,] + cat_metric
     cat_res = [
             [f'cat {idx}',] + [f'{el:.6f}' for el in group]

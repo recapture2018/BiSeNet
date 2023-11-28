@@ -113,7 +113,7 @@ class CityScapes(Dataset):
         img, label = cv2.imread(impth), cv2.imread(lbpth, 0)
         label = self.lb_map[label]
         im_lb = dict(im=img, lb=label)
-        if not self.trans_func is None:
+        if self.trans_func is not None:
             im_lb = self.trans_func(im_lb)
         im_lb = self.to_tensor(im_lb)
         img, label = im_lb['im'], im_lb['lb']
@@ -166,26 +166,8 @@ def get_data_loader(datapth, ims_per_gpu, max_iter=None, mode='train', distribut
 
     ds = CityScapes(datapth, trans_func=trans_func, mode=mode)
 
-    if distributed:
-        assert dist.is_available(), "dist should be initialzed"
-        if mode == 'train':
-            assert not max_iter is None
-            n_train_imgs = ims_per_gpu * dist.get_world_size() * max_iter
-            sampler = RepeatedDistSampler(ds, n_train_imgs, shuffle=shuffle)
-        else:
-            sampler = torch.utils.data.distributed.DistributedSampler(
-                ds, shuffle=shuffle)
-        batchsampler = torch.utils.data.sampler.BatchSampler(
-            sampler, batchsize, drop_last=drop_last
-        )
-        dl = DataLoader(
-            ds,
-            batch_sampler=batchsampler,
-            num_workers=4,
-            pin_memory=True,
-        )
-    else:
-        dl = DataLoader(
+    if not distributed:
+        return DataLoader(
             ds,
             batch_size=batchsize,
             shuffle=shuffle,
@@ -193,7 +175,23 @@ def get_data_loader(datapth, ims_per_gpu, max_iter=None, mode='train', distribut
             num_workers=4,
             pin_memory=True,
         )
-    return dl
+    assert dist.is_available(), "dist should be initialzed"
+    if mode == 'train':
+        assert max_iter is not None
+        n_train_imgs = ims_per_gpu * dist.get_world_size() * max_iter
+        sampler = RepeatedDistSampler(ds, n_train_imgs, shuffle=shuffle)
+    else:
+        sampler = torch.utils.data.distributed.DistributedSampler(
+            ds, shuffle=shuffle)
+    batchsampler = torch.utils.data.sampler.BatchSampler(
+        sampler, batchsize, drop_last=drop_last
+    )
+    return DataLoader(
+        ds,
+        batch_sampler=batchsampler,
+        num_workers=4,
+        pin_memory=True,
+    )
 
 
 

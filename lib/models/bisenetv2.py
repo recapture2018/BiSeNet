@@ -277,8 +277,7 @@ class BGALayer(nn.Module):
         left = left1 * torch.sigmoid(right1)
         right = left2 * torch.sigmoid(right2)
         right = self.up2(right)
-        out = self.conv(left + right)
-        return out
+        return self.conv(left + right)
 
 
 
@@ -344,8 +343,7 @@ class BiSeNetV2(nn.Module):
         elif self.aux_mode == 'eval':
             return logits,
         elif self.aux_mode == 'pred':
-            pred = logits.argmax(dim=1)
-            return pred
+            return logits.argmax(dim=1)
         else:
             raise NotImplementedError
 
@@ -353,7 +351,7 @@ class BiSeNetV2(nn.Module):
         for name, module in self.named_modules():
             if isinstance(module, (nn.Conv2d, nn.Linear)):
                 nn.init.kaiming_normal_(module.weight, mode='fan_out')
-                if not module.bias is None: nn.init.constant_(module.bias, 0)
+                if module.bias is not None: nn.init.constant_(module.bias, 0)
             elif isinstance(module, nn.modules.batchnorm._BatchNorm):
                 if hasattr(module, 'last_bn') and module.last_bn:
                     nn.init.zeros_(module.weight)
